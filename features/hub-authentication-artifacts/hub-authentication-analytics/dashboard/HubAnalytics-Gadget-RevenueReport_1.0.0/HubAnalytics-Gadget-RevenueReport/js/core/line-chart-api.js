@@ -68,7 +68,7 @@ var getConfig, validate, isProviderRequired, draw, update;
      * @param schema
      * @param data
      */
-    draw = function(placeholder, chartConfig, _schema, data) {
+    draw = function(placeholder, chartConfig, _schema, data, loggedInUser) {
         _schema = updateUserPrefXYTypes(_schema, chartConfig);
         var schema = toVizGrammarSchema(_schema);
 
@@ -92,68 +92,158 @@ var getConfig, validate, isProviderRequired, draw, update;
             totalAmount += groupRow[arcConfig.x];
         });
 
-        data.forEach(function(row) {
-            var notAvailable = true;
-            var notAvailableSp = true;
-            var notAvailableMNO = true;
-            var groupRow = JSON.parse(JSON.stringify(row));
-            var groupRowSP = JSON.parse(JSON.stringify(row));
-            var groupRowMNO = JSON.parse(JSON.stringify(row));
+        if (loggedInUser.isAdmin) {
+            data.forEach(function(row) {
+                var notAvailable = true;
+                var notAvailableSp = true;
+                var notAvailableMNO = true;
+                var groupRow = JSON.parse(JSON.stringify(row));
+                var groupRowSP = JSON.parse(JSON.stringify(row));
+                var groupRowMNO = JSON.parse(JSON.stringify(row));
 
 
-            groupData.forEach(function(row2) {
-                if (groupRow[arcConfig.color] == row2[arcConfig.color]) {
-                    notAvailable = false;
-                }
-            });
-
-            groupDataSP.forEach(function (row2) {
-                if (groupRowSP[archConfigSp.color] == row2[archConfigSp.color]) {
-                    notAvailableSp = false;
-                }
-            });
-
-            groupDataMNO.forEach(function (row2) {
-                if (groupRowMNO[archConfigMNO.color] == row2[archConfigMNO.color]) {
-                    notAvailableMNO = false;
-                }
-            });
-
-            if (notAvailable) {
-                groupRow[arcConfig.x] = 0;
-
-                data.forEach(function(row2) {
+                groupData.forEach(function(row2) {
                     if (groupRow[arcConfig.color] == row2[arcConfig.color]) {
-                        groupRow[arcConfig.x] += ((row2[arcConfig.x])/totalAmount)*100;
+                        notAvailable = false;
                     }
                 });
 
-                groupData.push(groupRow);
-            }
-
-            if (notAvailableSp) {
-                groupRowSP[archConfigSp.x] = 0;
-                data.forEach(function(row2) {
-
+                groupDataSP.forEach(function (row2) {
                     if (groupRowSP[archConfigSp.color] == row2[archConfigSp.color]) {
-                        groupRowSP[archConfigSp.x] += ((row2[archConfigSp.x])/totalAmount)*100;
+                        notAvailableSp = false;
                     }
                 });
 
-                groupDataSP.push(groupRowSP);
-            }
-
-            if (notAvailableMNO) {
-                groupRowMNO[archConfigMNO.x] = 0;
-                data.forEach(function(row2) {
-
+                groupDataMNO.forEach(function (row2) {
                     if (groupRowMNO[archConfigMNO.color] == row2[archConfigMNO.color]) {
-                        groupRowMNO[archConfigMNO.x] += ((row2[archConfigMNO.x])/totalAmount)*100;
+                        notAvailableMNO = false;
                     }
                 });
-                groupDataMNO.push(groupRowMNO);
-            }
-        });
+
+                if (notAvailable) {
+                    groupRow[arcConfig.x] = 0;
+
+                    data.forEach(function(row2) {
+                        if (groupRow[arcConfig.color] == row2[arcConfig.color]) {
+                            groupRow[arcConfig.x] += ((row2[arcConfig.x])/totalAmount)*100;
+                        }
+                    });
+
+                    groupData.push(groupRow);
+                }
+
+                if (notAvailableSp) {
+                    groupRowSP[archConfigSp.x] = 0;
+                    data.forEach(function(row2) {
+
+                        if (groupRowSP[archConfigSp.color] == row2[archConfigSp.color]) {
+                            groupRowSP[archConfigSp.x] += ((row2[archConfigSp.x])/totalAmount)*100;
+                        }
+                    });
+
+                    groupDataSP.push(groupRowSP);
+                }
+
+                if (notAvailableMNO) {
+                    groupRowMNO[archConfigMNO.x] = 0;
+                    data.forEach(function(row2) {
+
+                        if (groupRowMNO[archConfigMNO.color] == row2[archConfigMNO.color]) {
+                            groupRowMNO[archConfigMNO.x] += ((row2[archConfigMNO.x])/totalAmount)*100;
+                        }
+                    });
+                    groupDataMNO.push(groupRowMNO);
+                }
+            });
+        } else if (loggedInUser.isServiceProvider) {
+            data.forEach(function(row) {
+                var notAvailable = true;
+                var notAvailableMNO = true;
+                var groupRow = JSON.parse(JSON.stringify(row));
+                var groupRowMNO = JSON.parse(JSON.stringify(row));
+
+
+                groupData.forEach(function(row2) {
+                    if (groupRow[arcConfig.color] == row2[arcConfig.color]) {
+                        notAvailable = false;
+                    }
+                });
+
+                groupDataMNO.forEach(function (row2) {
+                    if (groupRowMNO[archConfigMNO.color] == row2[archConfigMNO.color]) {
+                        notAvailableMNO = false;
+                    }
+                });
+
+                if (notAvailable) {
+                    groupRow[arcConfig.x] = 0;
+
+                    data.forEach(function(row2) {
+                        if (groupRow[arcConfig.color] == row2[arcConfig.color]) {
+                            groupRow[arcConfig.x] += ((row2[arcConfig.x])/totalAmount)*100;
+                        }
+                    });
+
+                    groupData.push(groupRow);
+                }
+
+                if (notAvailableMNO) {
+                    groupRowMNO[archConfigMNO.x] = 0;
+                    data.forEach(function(row2) {
+
+                        if (groupRowMNO[archConfigMNO.color] == row2[archConfigMNO.color]) {
+                            groupRowMNO[archConfigMNO.x] += ((row2[archConfigMNO.x])/totalAmount)*100;
+                        }
+                    });
+                    groupDataMNO.push(groupRowMNO);
+                }
+            });
+        } else if (loggedInUser.isOperatorAdmin) {
+            data.forEach(function(row) {
+                var notAvailable = true;
+                var notAvailableSp = true;
+                var groupRow = JSON.parse(JSON.stringify(row));
+                var groupRowSP = JSON.parse(JSON.stringify(row));
+
+                groupData.forEach(function(row2) {
+                    if (groupRow[arcConfig.color] == row2[arcConfig.color]) {
+                        notAvailable = false;
+                    }
+                });
+
+                groupDataSP.forEach(function (row2) {
+                    if (groupRowSP[archConfigSp.color] == row2[archConfigSp.color]) {
+                        notAvailableSp = false;
+                    }
+                });
+
+                if (notAvailable) {
+                    groupRow[arcConfig.x] = 0;
+
+                    data.forEach(function(row2) {
+                        if (groupRow[arcConfig.color] == row2[arcConfig.color]) {
+                            groupRow[arcConfig.x] += ((row2[arcConfig.x])/totalAmount)*100;
+                        }
+                    });
+
+                    groupData.push(groupRow);
+                }
+
+                if (notAvailableSp) {
+                    groupRowSP[archConfigSp.x] = 0;
+                    data.forEach(function(row2) {
+
+                        if (groupRowSP[archConfigSp.color] == row2[archConfigSp.color]) {
+                            groupRowSP[archConfigSp.x] += ((row2[archConfigSp.x])/totalAmount)*100;
+                        }
+                    });
+
+                    groupDataSP.push(groupRowSP);
+                }
+            });
+        }
+
+
 
         var view1 = {
             id: "chart-1",
