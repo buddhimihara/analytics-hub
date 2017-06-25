@@ -10,7 +10,7 @@
         USING CarbonAnalytics
         OPTIONS(tableName "ORG_WSO2TELCO_ANALYTICS_HUB_STREAM_PREPROCESSEDRESPONSESTATISTICS");
 
-        CREATE TEMPORARY TABLE WSO2TELCO_PRICING_FAILED_SUMMARY using CarbonAnalytics options (tableName "status_kelawechcha_table_eka",
+        CREATE TEMPORARY TABLE WSO2TELCO_PRICING_FAILED_SUMMARY using CarbonAnalytics options (tableName "WSO2TELCO_PRICING_FAILED_SUMMARY",
         schema "
         requestId STRING -i,
         responseTime STRING -i,

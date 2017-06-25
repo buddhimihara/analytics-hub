@@ -4,7 +4,9 @@ import com.google.gson.Gson;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.*;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.wso2.carbon.analytics.dataservice.commons.AnalyticsDataResponse;
 import org.wso2.carbon.analytics.dataservice.commons.SearchResultEntry;
 import org.wso2.carbon.analytics.dataservice.core.AnalyticsDataServiceUtils;
@@ -19,9 +21,6 @@ import org.wso2telco.analytics.hub.report.engine.internel.util.PDFWriter;
 import org.wso2telco.analytics.hub.report.engine.internel.util.ReportEngineServiceConstants;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -119,6 +118,12 @@ class ReportEngineGenerator implements Runnable {
             } else if (reportType.equalsIgnoreCase("billingCSV")) {
                 String filepath = reportName + ".csv";
                 generate(tableName, query, filepath, tenantId, 0, searchCount, writeBufferLength);
+            } else if (reportType.equalsIgnoreCase("billingErrorCSV")) {
+                String filepath = reportName + ".csv";
+                generate(tableName, query, filepath, tenantId, 0, searchCount, writeBufferLength);
+            } else if (reportType.equalsIgnoreCase("responseTimeCSV")) {
+                String filepath = reportName + ".csv";
+                generate(tableName, query, filepath, tenantId, 0, searchCount, writeBufferLength);
             }
 
 
@@ -175,8 +180,12 @@ class ReportEngineGenerator implements Runnable {
         try {
             if (reportType.equalsIgnoreCase("trafficCSV")) {
                 CSVWriter.writeTrafficCSV(records, writeBufferLength, filePath);
-            } else {
+            } else if (reportType.equalsIgnoreCase("billingCSV")) {
                 CSVWriter.writeCSV(records, writeBufferLength, filePath, dataColumns, columnHeads);
+            } else if (reportType.equalsIgnoreCase("billingErrorCSV")) {
+                CSVWriter.writeErrorCSV(records, writeBufferLength, filePath, dataColumns, columnHeads);
+            } else if (reportType.equalsIgnoreCase("responseTimeCSV")) {
+                CSVWriter.writeResponseTImeCSV(records, writeBufferLength, filePath, dataColumns, columnHeads);
             }
         } catch (IOException e) {
             log.error("CSV file " + filePath + " cannot be created", e);

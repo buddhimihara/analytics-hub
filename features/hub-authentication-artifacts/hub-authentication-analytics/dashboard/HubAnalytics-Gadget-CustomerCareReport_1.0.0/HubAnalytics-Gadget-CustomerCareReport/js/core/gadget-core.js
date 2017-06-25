@@ -33,6 +33,30 @@ $(function () {
             }
         });        
     };
+
+
+    var getLoggedInUser = function () {
+        $.ajax({
+            url: gadgetLocation + '/gadget-controller.jag?action=getLoggedInUser',
+            method: METHOD.POST,
+            data: JSON.stringify(conf),
+            contentType: CONTENT_TYPE,
+            async: false,
+            success: function (data) {
+                loggedInUser = data.LoggedInUser;
+                operatorName = loggedInUser.operatorNameInProfile;
+
+                // hide the operator / serviceProvider drop-down according to logged in user
+                hideDropDown(loggedInUser);
+            },
+            complete : function (xhr, textStatus) {
+                if (xhr.status == "403") {
+                    window.top.location.reload(false);
+                }
+            }
+        });
+    };
+
     // Add event listener for opening and closing details
     $('#devSupportTable').on('click', 'td.details-control', function () {
         var tr = $(this).closest('tr');
@@ -135,6 +159,7 @@ $(function () {
     });
 
     function reloadDatatable() {
+        getLoggedInUser();
         getDatatableConf();
         mytable.ajax.reload();
     };

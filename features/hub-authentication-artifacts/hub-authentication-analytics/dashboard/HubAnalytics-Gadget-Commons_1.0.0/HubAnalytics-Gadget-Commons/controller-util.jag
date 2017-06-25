@@ -18,7 +18,13 @@ var loggedInUser = {
 
 //TODO: NO need to use get role function do it in single function
 function getLoggedInUser () {
+
     var user = session.get('user');
+    if(user == null) {
+        response.status=403;
+        return;
+    }
+
     var role = getRole(user);
 
     switch (role) {
@@ -100,23 +106,28 @@ function getDataQuery(data) {
             all = false;
         }
     } else if (providerConf[PROVIDER_NAME] == TYPE.SP) {
+
         if (data.serviceProvider != "0" && data.operatorName != undefined) {
-            if(data.operatorName != "all" )  {
+            if(data.operatorName != "all")  {
                 providerConf.query += "serviceProviderId:" + "(" + data.serviceProvider + ")" +" AND operatorName:" + "(" + data.operatorName + ")";
             } else  {
                 providerConf.query += "serviceProviderId:" + "(" + data.serviceProvider + ")";
             }
             all = false;
-        } else {
-            if (loggedInUser.isOperatorAdmin) {
-                providerConf.query += "operatorName:" + "(" + data.operatorName + ")";
-            }
-        }
 
-    } else if (providerConf[PROVIDER_NAME] == TYPE.APP) {
+        } else if (loggedInUser.isOperatorAdmin) {
+            providerConf.query += "operatorName:" + "(" + data.operatorName + ")";
+        } else if(data.operatorName != undefined){
+            providerConf.query += "operatorName:" + "(" + data.operatorName + ")";
+        }
+    }
+
+    else if (providerConf[PROVIDER_NAME] == TYPE.APP) {
         if (data.applicationId != "()" && data.applicationId != "0" && data.operatorName != undefined) {
             providerConf.query += "applicationId:" + data.applicationId;
             all = false;
+        } else if (data.operatorName != undefined) {
+            providerConf.query += "operatorName:" + data.operatorName;
         }
     }
 

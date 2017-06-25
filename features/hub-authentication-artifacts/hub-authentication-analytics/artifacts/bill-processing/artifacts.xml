@@ -8,12 +8,16 @@
         <dependency artifact="Eventstore_billing_processedStatistics" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
         <dependency artifact="Eventstream_billing_processedStatistics" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
         <dependency artifact="Executionplan_billing_processedStatistics" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
-        <!--<dependency artifact="Sparkscript_billing_processedStatistics" version="1.0.0" include="true" serverRole="DataAnalyticsServer" />-->
 
         <dependency artifact="Eventstream_hubAnalytics_preProcessedResponseStatistics" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
         <dependency artifact="Eventstore_hubAnalytics_preProcessedResponseStatistics" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
         <dependency artifact="Executionplan_hubAnalytics_preProcessedGenericReports" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
         <dependency artifact="Sparkscript_repricing_processedStatistics" version="1.0.0" include="true" serverRole="DataAnalyticsServer" />
+
+        <dependency artifact="Eventstream_pricing_jsonProcessedResponseStatistics" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
+        <dependency artifact="Executionplan_pricing_jsonProcessedStatistics" version="1.0.0" include="true" serverRole="DataAnalyticsServer"/>
+        <dependency artifact="Sparkscript_pricing_priceAllSps" version="1.0.0" include="true" serverRole="DataAnalyticsServer" />
+
 
     </artifact>
 </artifacts>

@@ -165,6 +165,12 @@
                                                 <button type="button" id="button-generate-bill-pdf"  class="btn btn-primary curve-btn btn-lg col-xs-12"> <i class="fw fw-compare"></i> Generate Summery Bill</button>
                                                  <br>
                                             </div>
+                                            <div class="col-xs-3" id="generate-error-csv">
+                                             <br> <br>
+                                                <label for="button-generate-error-csv"></label>
+                                                <button type="button" id="button-generate-error-csv"  class="btn btn-primary curve-btn btn-lg col-xs-12"> <i class="fw fw-compare"></i> Generate Error Report</button>
+                                                 <br>
+                                            </div>
                                     </div>
                                      <div class="row">
                                           <div class="col-xs-2"></div>
@@ -178,6 +184,12 @@
                                                  <br>
                                                 <label for="list-the-bill"></label>
                                                 <button type="button" id="list-the-bill"  class="btn btn-warning curve-btn btn-lg col-xs-12 hidden"><i class="fw fw-menu"></i> List Summery Bill</button>
+                                                 <br> <br>
+                                            </div>
+                                            <div class="col-xs-3">
+                                                 <br>
+                                                <label for="list-error-report"></label>
+                                                <button type="button" id="list-error-report"  class="btn btn-warning curve-btn btn-lg col-xs-12 hidden"><i class="fw fw-menu"></i> List Error Report</button>
                                                  <br> <br>
                                             </div>
                                    </div>

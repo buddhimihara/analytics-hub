@@ -74,6 +74,11 @@ $(function () {
 
                 // hide the operator / serviceProvider drop-down according to logged in user
                 hideDropDown(loggedInUser);
+            },
+            complete : function (xhr, textStatus) {
+                if (xhr.status == "403") {
+                    window.top.location.reload(false);
+                }
             }
         });
     };
@@ -91,6 +96,18 @@ $(function () {
                 providerData = data;
             }
         });
+
+        if(providerData != '') {
+            $("#generateCSV").show();
+            if(loggedInUser.isAdmin){
+                $("#tableSelect").show();
+            }
+
+        } else {
+            $("#generateCSV").hide();
+            $("#tableSelect").hide();
+
+        }
         return providerData;
     };
 
@@ -102,23 +119,18 @@ $(function () {
     };
 
     $("#button-search").click(function() {
-        $("#canvas").html("");
-        $("#canvas2").html("");
+        getFilterdResult();
+    });
+
+     function getFilterdResult() {
+         getLoggedInUser();
+      $("#canvas").html("");
+         $("#showCSV").hide();
         getGadgetLocation(function (gadget_Location) {
             gadgetLocation = gadget_Location;
             init();
             drawGadget(getProviderData());
         });
-    });
-
-     function getFilterdResult() {
-      $("#canvas").html("");
-        $("#canvas2").html("");
-        getGadgetLocation(function (gadget_Location) {
-            gadgetLocation = gadget_Location;
-            init();
-            drawGadget(getProviderData());
-        });  
     };
 
     $("#btnLastDay").click(function() {
@@ -137,13 +149,97 @@ $(function () {
       getFilterdResult();
     });
 
+    $("#button-generate-tr").click(function () {
+        getLoggedInUser();
+        getGadgetLocation(function (gadget_Location) {
+            gadgetLocation = gadget_Location;
+            $("#output").html("");
+            if (operatorSelected) {
+                conf.operatorName = selectedOperator;
+            } else {
+                conf.operatorName = operatorName;
+            }
+            conf.serviceProvider = serviceProviderId;
+            conf.api = apiId;
+            conf.applicationName = applicationId;
+
+            conf.dateStart = moment(moment($("#reportrange").text().split("-")[0]).format("MMMM D, YYYY hh:mm A")).valueOf();
+            conf.dateEnd = moment(moment($("#reportrange").text().split("-")[1]).format("MMMM D, YYYY hh:mm A")).valueOf();
+
+            conf[PROVIDER_CONF][TABLE_NAME] = STREAMS.RESPONSE_TIME_SUMMERY;
+
+            var btn = $("#button-generate-tr");
+            btn.prop('disabled', true);
+            setTimeout(function () {
+                btn.prop('disabled', false);
+            }, 3000);
+
+            $.ajax({
+                url: gadgetLocation + '/gadget-controller.jag?action=generateCSV',
+                method: METHOD.POST,
+                data: JSON.stringify(conf),
+                contentType: CONTENT_TYPE,
+                async: false,
+                success: function (data) {
+                    $("#showCSV").show();
+                    $("#list-available-report").show();
+                    $("#output").html('<div id="success-message" class="alert alert-success"><strong>Report is generating</strong> '
+                        + "Please refresh the traffic report"
+                        + '</div>' + $("#output").html());
+                    $('#success-message').fadeIn().delay(2000).fadeOut();
+                }
+            });
+        });
+    });
+
+
+    $("#list-available-report").click(function () {
+        getLoggedInUser();
+        $("#output").html("");
+
+
+        getGadgetLocation(function (gadget_Location) {
+            gadgetLocation = gadget_Location;
+            $.ajax({
+                url: gadgetLocation + '/gadget-controller.jag?action=available',
+                method: METHOD.POST,
+                data: JSON.stringify(conf),
+                contentType: CONTENT_TYPE,
+                async: false,
+                dataType: 'json',
+                success: function (data) {
+                    $("#output").html("<ul class = 'list-group'>")
+                    for (var i = 0; i < data.length; i++) {
+                        $("#output").html($("#output").html() + "<li class = 'list-group-item'>" +
+                            " <span class='btn-label'>" + data[i].name + "</span>" +
+                            " <div class='btn-toolbar'>" +
+                            "<a class='btn btn-primary btn-xs' onclick='downloadFile(" + data[i].index + ")'>Download</a>" +
+                            "</div>" +
+                            "</li>");
+                    }
+                    $("#output").html($("#output").html() + "<ul/>")
+
+                },
+                error: function (data) {
+                    console.log('failed');
+                }
+            });
+
+        });
+
+    });
+
+
     getGadgetLocation(function (gadget_Location) {
         gadgetLocation = gadget_Location;
         init();
         getLoggedInUser();
         loadOperator();
 
-        function loadOperator () {
+        $("#generateCSV").hide();
+        $("#tableSelect").hide();
+        $("#showCSV").hide();
+        function loadOperator() {
 
             if(loggedInUser.isOperatorAdmin) {
                 loadSP(loggedInUser.operatorNameInProfile);
@@ -381,4 +477,13 @@ $(function () {
         $("#button-type").val($(this).text());
         getFilterdResult();
     });
-});
+}
+);
+
+function downloadFile(index) {
+    getGadgetLocation(function (gadget_Location) {
+        gadgetLocation = gadget_Location;
+        location.href = gadgetLocation + '/gadget-controller.jag?action=get&index=' + index;
+
+    });
+}

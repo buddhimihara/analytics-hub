@@ -38,6 +38,7 @@ public class PDFWriter {
     }
 
     public static void generatePdf(String pdfName, String jasperFileDir, List<Record> recordList, HashMap params) {
+
         params.put(JRParameter.IS_IGNORE_PAGINATION, Boolean.TRUE);
         JasperPrint jasperPrint = null;
         try {
@@ -45,6 +46,7 @@ public class PDFWriter {
             jasperPrint = JasperFillManager.fillReport(reportFile.getPath(), params, getDataSourceDetailReport
                     (recordList));
             File filename = new File(workingDir + "/" + pdfName);
+            filename.getParentFile().mkdirs();
             JasperExportManager.exportReportToPdfStream(jasperPrint, new FileOutputStream(filename + ".pdf"));
         } catch (JRException e) {
             e.printStackTrace();
@@ -59,7 +61,6 @@ public class PDFWriter {
 
     //    year month direction api apiID  applicationName applicationId serviceProvider  serviceProviderId   operatorName operatorId  operation category  subcategory totalCount totalAmount
         // totalOpCommision  totalSpCommision  totalHbCommision
-
 
         for (Record record : recordList) {
             DetailReportAlert reportAlert = new DetailReportAlert();

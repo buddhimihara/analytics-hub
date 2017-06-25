@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<artifact name="Sparkscript_billing_processedStatistics" version="1.0.0" type="analytics/spark" serverRole="DataAnalyticsServer">
-    <file>Sparkscript-billing-processedStatistics.xml</file>
-</artifact>

@@ -2,58 +2,70 @@
 <Analytics>
     <Name>Sparkscript-hubAnalytics-CommonStats</Name>
     <Script>
-CREATE TEMPORARY TABLE ORG_WSO2TELCO_ANALYTICS_HUB_STREAM_PROCESSEDSTATISTICS
-      USING CarbonAnalytics
-      OPTIONS(tableName "ORG_WSO2TELCO_ANALYTICS_HUB_STREAM_PROCESSEDSTATISTICS");
-      
-CREATE TEMPORARY TABLE APISummary using CarbonAnalytics options (tableName "org_wso2telco_analytics_hub_stream_api_summary",
-    schema "
-    api STRING -i,
-    serviceProvider STRING -i,
-    applicationName STRING -i,
-    operatorId STRING -i,
-    apiPublisher STRING -i,
-    serviceProviderId STRING -i,
-    operatorName STRING -i,
-    apiPublisherID STRING -i,
-    apiID STRING -i,
-    department STRING -i,
-    applicationId STRING -i",
-    primaryKeys "api,serviceProvider,applicationName,operatorId"
-    );
 
-CREATE TEMPORARY TABLE SPSummary using CarbonAnalytics options (tableName "org_wso2telco_analytics_hub_stream_service_provider_summary",
-    schema "
-    serviceProvider STRING -i,
-    serviceProviderId STRING -i",
-    primaryKeys "serviceProvider"
-    );
 
-CREATE TEMPORARY TABLE OperatorSummary using CarbonAnalytics options (tableName "org_wso2telco_analytics_hub_stream_operator_summary",
-    schema "
-    operatorId STRING -i,
-    operatorName STRING -i",
-    primaryKeys "operatorId"
-    );
+        create temporary table spark_jdbc_OperatorSummary using CarbonJDBC options (dataSource "WSO2TELCO_DEP_DB", schema "ID STRING, operatorname STRING", tableName "operators");
 
-INSERT INTO TABLE SPSummary SELECT serviceProvider, serviceProviderId FROM ORG_WSO2TELCO_ANALYTICS_HUB_STREAM_PROCESSEDSTATISTICS
-        GROUP BY serviceProvider, serviceProviderId;
+        CREATE TEMPORARY TABLE OperatorSummary using CarbonAnalytics options (tableName "org_wso2telco_analytics_hub_stream_operator_summary",
+        schema "
+        operatorId STRING -i,
+        operatorName STRING -i",
+        primaryKeys "operatorId"
+        );
+        insert overwrite table OperatorSummary  select * from spark_jdbc_OperatorSummary;
 
-INCREMENTAL_TABLE_COMMIT SPSummary;
+        INCREMENTAL_TABLE_COMMIT SPSummary;
 
-INSERT INTO TABLE OperatorSummary SELECT operatorId, operatorName FROM ORG_WSO2TELCO_ANALYTICS_HUB_STREAM_PROCESSEDSTATISTICS
-        GROUP BY operatorId, operatorName;
+        create temporary table spark_jdbc_SPSummary using CarbonJDBC options (dataSource "WSO2UM_DB", schema "um_id STRING, um_user_name STRING", tableName "um_user");
+        CREATE TEMPORARY TABLE SPSummary using CarbonAnalytics options (tableName "org_wso2telco_analytics_hub_stream_service_provider_summary",
+        schema "
+        serviceProvider STRING -i,
+        serviceProviderId STRING -i",
+        primaryKeys "serviceProvider"
+        );
+        insert overwrite table SPSummary select concat(um_user_name,"@carbon.super") as serviceProviderId ,concat(um_user_name,"@carbon.super") as serviceProviderId from spark_jdbc_SPSummary;
 
-INCREMENTAL_TABLE_COMMIT OperatorSummary;
+        INCREMENTAL_TABLE_COMMIT OperatorSummary;
 
-INSERT INTO TABLE APISummary SELECT api,serviceProvider,applicationName,operatorId,
-        apiPublisher, serviceProviderId, operatorName, apiPublisherID, apiID, department, applicationId
-        FROM ORG_WSO2TELCO_ANALYTICS_HUB_STREAM_PROCESSEDSTATISTICS GROUP BY api,serviceProvider,applicationName,operatorId,
-        apiPublisher, serviceProviderId, operatorName, apiPublisherID, apiID, department, applicationId;
 
-INCREMENTAL_TABLE_COMMIT APISummary;
+        create temporary table spark_jdbc_operator using CarbonJDBC options (dataSource "WSO2TELCO_DEP_DB", schema "id STRING, operatorname STRING", tableName "operators");
+        create temporary table spark_jdbc_operatorapps using CarbonJDBC options (dataSource "WSO2TELCO_DEP_DB", schema "applicationid STRING, operatorid STRING", tableName "operatorapps");
+        create temporary table spark_jdbc_am_subscription using CarbonJDBC options (dataSource "WSO2AM_DB", schema "api_id STRING, application_id STRING, created_by STRING ", tableName "am_subscription");
+        create temporary table spark_jdbc_am_application using CarbonJDBC options (dataSource "WSO2AM_DB", schema "application_id STRING, name STRING ", tableName "am_application");
+        create temporary table spark_jdbc_am_api using CarbonJDBC options (dataSource "WSO2AM_DB", schema "api_id STRING, api_provider STRING, api_name STRING, api_version STRING ", tableName "am_api");
 
-</Script>
+        CREATE TEMPORARY TABLE APISummary using CarbonAnalytics options (tableName "org_wso2telco_analytics_hub_stream_api_summary",
+        schema "
+        api STRING -i,
+        serviceProvider STRING -i,
+        applicationName STRING -i,
+        operatorId STRING -i,
+        apiPublisher STRING -i,
+        serviceProviderId STRING -i,
+        operatorName STRING -i,
+        apiPublisherID STRING -i,
+        apiID STRING -i,
+        applicationId STRING -i",
+        primaryKeys "api,serviceProvider,applicationName,operatorId"
+        );
+
+        insert overwrite table APISummary select spark_jdbc_am_api.api_name as api, concat(spark_jdbc_am_subscription.created_by,"@carbon.super") AS serviceProvider, spark_jdbc_am_application.name AS applicationName, spark_jdbc_operator.id AS operatorId,
+        spark_jdbc_am_api.api_provider AS apiPublisher,
+        concat(spark_jdbc_am_subscription.created_by,"@carbon.super") AS serviceProviderId,
+        spark_jdbc_operator.operatorname AS operatorName,
+        spark_jdbc_am_api.api_provider AS apiPublisherID,
+        concat(concat(spark_jdbc_am_api.api_name,"_v"),spark_jdbc_am_api.api_version) AS apiID,
+        spark_jdbc_am_application.application_id AS applicationId
+        FROM spark_jdbc_am_subscription
+        JOIN spark_jdbc_operatorapps ON (spark_jdbc_am_subscription.application_id = spark_jdbc_operatorapps.applicationid)
+        JOIN spark_jdbc_operator ON (spark_jdbc_operatorapps.operatorid = spark_jdbc_operator.id)
+        JOIN spark_jdbc_am_application ON (spark_jdbc_am_subscription.application_id = spark_jdbc_am_application.application_id)
+        JOIN spark_jdbc_am_api ON (spark_jdbc_am_subscription.api_id= spark_jdbc_am_api.api_id);
+
+        INCREMENTAL_TABLE_COMMIT APISummary;
+
+
+    </Script>
     <CronExpression>0 0/5 * * * ?</CronExpression>
 </Analytics>
                       

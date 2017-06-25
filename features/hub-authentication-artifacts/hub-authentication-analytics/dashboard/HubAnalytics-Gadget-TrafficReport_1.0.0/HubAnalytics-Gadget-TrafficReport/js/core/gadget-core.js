@@ -79,9 +79,13 @@ $(function () {
             success: function (data) {
                 loggedInUser = data.LoggedInUser;
                 operatorName = loggedInUser.operatorNameInProfile;
-
                 // hide the operator / serviceProvider drop-down according to logged in user
                 hideDropDown(loggedInUser);
+            },
+            complete : function (xhr, textStatus) {
+                if (xhr.status == "403") {
+                    window.top.location.reload(false);
+                }
             }
         });
     };
@@ -131,6 +135,7 @@ $(function () {
         $("#canvas2").html("");
         $("#showCSV").hide();
         getGadgetLocation(function (gadget_Location) {
+            getLoggedInUser();
             gadgetLocation = gadget_Location;
             init();
             getProviderData();
@@ -139,15 +144,7 @@ $(function () {
     };
 
     $("#button-search").click(function() {
-        $("#canvas").html("");
-        $("#canvas2").html("");
-        $("#showCSV").hide();
-        getGadgetLocation(function (gadget_Location) {
-            gadgetLocation = gadget_Location;
-            init();
-            getProviderData();
-            drawGadget();
-        });
+        getFilterdResult();
     });
     
     $("#btnLastDay").click(function() {
@@ -169,6 +166,7 @@ $(function () {
 
 
     $("#button-generate-tr").click(function () {
+        getLoggedInUser();
         getGadgetLocation(function (gadget_Location) {
             gadgetLocation = gadget_Location;
             $("#output").html("");
@@ -216,6 +214,7 @@ $(function () {
 
 
     $("#list-available-report").click(function () {
+        getLoggedInUser();
         $("#output").html("");
         getGadgetLocation(function(gadget_Location) {
             gadgetLocation = gadget_Location;

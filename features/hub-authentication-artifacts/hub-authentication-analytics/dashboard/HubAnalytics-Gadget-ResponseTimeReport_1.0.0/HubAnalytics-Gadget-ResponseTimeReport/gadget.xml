@@ -149,6 +149,24 @@
                                 <div id="canvas2"></div>
                             </div>
                         </div>
+                        </br></br>
+                        <div class="row" id="generateCSV">
+                            <table><tr><td>
+                            <div class="col-xs-2">
+                                <label for="button-generate-tr">  </label>
+                                <button type="button" id="button-generate-tr"  class="btn btn-primary curve-btn">Generate csv</button>
+                            </div></td><td>
+				            <div class="col-xs-2">
+                                <label for="list-available-report">  </label>
+                                <button type="button" id="list-available-report"  class="btn btn-primary curve-btn">List Report</button>
+                            </div></td></tr></table>
+                        </div>
+                        <br/>
+                        <div class="row" id="showCSV">
+                            <div class="col-xs-12">
+                                <div id="output"> </div>
+                            </div>
+                        </div>
                     <div>
                 </div>
             </div>

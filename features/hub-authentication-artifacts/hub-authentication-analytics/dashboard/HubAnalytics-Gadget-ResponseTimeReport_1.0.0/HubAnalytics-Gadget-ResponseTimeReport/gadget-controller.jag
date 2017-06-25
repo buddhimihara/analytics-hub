@@ -21,7 +21,7 @@
 
     include("../HubAnalytics-Gadget-Commons/constants.jag");
     include("../HubAnalytics-Gadget-Commons/controller-util.jag");
-
+    var jagConf = require('jagConf.json');
     response.contentType = 'application/json';
 
     var log = new Log();
@@ -29,9 +29,11 @@
     var action = request.getParameter("action");
     var filter = request.getParameter("filter");
     var data = request.getContent();
-
+    var providerAPI;
     var providerConf = data[PROVIDER_CONF];
-    var providerAPI = require('js/core/' + providerConf[PROVIDER_NAME] + PROVIDER_API);
+     if(providerConf != null){
+         providerAPI = require('js/core/' + providerConf[PROVIDER_NAME] + PROVIDER_API);
+     }
     var loggedInUser = getLoggedInUser();
 
     if (action === "getLoggedInUser") {
@@ -91,23 +93,28 @@
             }
 
         } else if (providerConf[PROVIDER_NAME] == TYPE.SP) {
+
             if (data.serviceProvider != "0" && data.operatorName != undefined) {
-                if(data.operatorName != "all" )  {
+                if(data.operatorName != "all")  {
                     providerConf.query += "serviceProviderId:" + "(" + data.serviceProvider + ")" +" AND operatorName:" + "(" + data.operatorName + ")";
                 } else  {
                     providerConf.query += "serviceProviderId:" + "(" + data.serviceProvider + ")";
                 }
                 all = false;
-            } else {
-                if (loggedInUser.isOperatorAdmin) {
-                    providerConf.query += "operatorName:" + "(" + data.operatorName + ")";
-                }
-            }
 
-        } else if (providerConf[PROVIDER_NAME] == TYPE.APP) {
-            if (data.applicationId != "()" && data.applicationId != "0" && data.applicationId != "(0)" && data.operatorName != undefined) {
+            } else if (loggedInUser.isOperatorAdmin) {
+                providerConf.query += "operatorName:" + "(" + data.operatorName + ")";
+            } else if(data.operatorName != undefined){
+                providerConf.query += "operatorName:" + "(" + data.operatorName + ")";
+            }
+        }
+
+        else if (providerConf[PROVIDER_NAME] == TYPE.APP) {
+            if (data.applicationId != "()" && data.applicationId != "0" && data.operatorName != undefined) {
                 providerConf.query += "applicationId:" + data.applicationId;
                 all = false;
+            } else if (data.operatorName != undefined) {
+                providerConf.query += "operatorName:" + data.operatorName;
             }
         }
 
@@ -136,5 +143,109 @@
         return;
     }
 
+    else if (loggedInUser != null) {
+
+        var userReportDirectory = "/reports/response-time/";
+        var directory = "repository/deployment/server/jaggeryapps/portal" + userReportDirectory;
+        var reportPrefix = loggedInUser.username.replace("@carbon.super","") + FILE_NAMES.RESPONSE_TIME_REPORT;
+
+        if (loggedInUser.hasNoRole) {
+            print({'message': 'Not Allowed!'});
+            return;
+        }
+
+        if (action == "generateCSV") {
+
+            var carbon = require('carbon');
+            removeAllFiles(userReportDirectory, reportPrefix);
+            var service = carbon.server.osgiService('org.wso2telco.analytics.hub.report.engine.ReportEngineService');
+
+            var timeRangeUtil = Packages.org.wso2.analytics.shared.util.time.TimeRangeUtils;
+            var timeUnit = timeRangeUtil.getSuitableTimeRangeUnit(data.dateStart, data.dateEnd);
+            timeUnit = (( timeUnit == 'MINUTE') || ( timeUnit == 'SECOND')) ? 'HOUR' : timeUnit;
+            var tableName = providerConf.tableName + timeUnit;
+            providerConf.query += "eventTimeStamp:[" + data.dateStart + " TO " + data.dateEnd + "]";
+            providerConf.tableName = tableName;
+
+            var reportMaxLength = 10;
+
+            if(loggedInUser.isOperatorAdmin) {
+                providerConf.query += " AND operatorName:" + loggedInUser.operatorNameInProfile;
+            } else {
+                //if (data.operatorName != "all" && data.operatorName != undefined && "serviceProvider" != role) {
+                if (data.operatorName != "all" && data.operatorName != undefined && !(loggedInUser.isServiceProvider)) {
+                    providerConf.query += " AND operatorName:" + data.operatorName;
+                }
+            }
+
+            if (loggedInUser.isServiceProvider) {
+                serviceProvider = loggedInUser.username;
+                providerConf.query += " AND spName:" + "\"" + serviceProvider + "\"";
+            } else {
+                if (data.serviceProvider != "0" && data.serviceProvider != undefined) {
+                    providerConf.query += " AND spName:" + "\"" + data.serviceProvider + "\"";
+                }
+            }
+
+            if (data.applicationName != "0" && data.applicationName != undefined) {
+                providerConf.query += " AND applicationId:" + data.applicationName;
+            }
+
+            if (data.api != "0" && data.api != undefined) {
+                providerConf.query += " AND apiID:" + data.api;
+            }
+            providerConf.query += " AND direction:" + "\""+ "sb" + "\"";
+
+            var reportName = directory + loggedInUser.username.replace("@carbon.super","") + FILE_NAMES.RESPONSE_TIME_REPORT + new Date().getTime();
+            var reportType = "responseTimeCSV";
+            var reportColumns = stringify( jagConf[jagConf["reportNames"]["response-time"]] );
+
+            service.generateReport(tableName, providerConf.query, reportName, reportMaxLength, reportType, reportColumns, null,
+                    null, null);
+            print({'message': 'Report is generating'});
+
+            return;
+
+        }
+
+        else if (action == "available") {
+
+            var file = new File(userReportDirectory);
+            var files = [];
+            for (var i = 0; i < file.listFiles().length; i++) {
+                if (!file.listFiles()[i].getName().search(loggedInUser.username.replace("@carbon.super","") +
+                                "-response-time-report-")) {
+                    files[i] = {"name": file.listFiles()[i].getName(), "index": i};
+                }
+            }
+            log.info(stringify(files));
+            print(files);
+            return;
+
+        } else if (action == "get" && request.getParameter("index") != null) {
+            var file = new File(userReportDirectory).listFiles()[request.getParameter("index")];
+            response.contentType = "application/octet-stream";
+            response.addHeader("Content-Disposition", "attachment; filename=" + file.getName());
+            print(file.getStream());
+
+        } else if (action == "remove" && request.getParameter("index") != null) {
+            var file = new File(userReportDirectory);
+            var result = file.listFiles()[request.getParameter("index")].del();
+            print({"fileDeleted": result});
+            return;
+        }
+    }
+
 }());
+
+function removeAllFiles(userReportDirectory, reportPrefix1) {
+    var file = new File(userReportDirectory);
+
+    for (var i = 0; i < file.listFiles().length; i++) {
+        if (!file.listFiles()[i].getName().search(reportPrefix1)) {
+            log.info("File " + file.listFiles()[i].getName() + " deleted.");
+            var result = file.listFiles()[i].del();
+        }
+    }
+};
 %>

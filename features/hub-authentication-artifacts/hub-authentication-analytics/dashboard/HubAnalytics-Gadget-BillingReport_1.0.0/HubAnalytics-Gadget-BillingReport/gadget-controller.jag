@@ -185,6 +185,67 @@
 
             return;
 
+        } else if (action == "generateErrorCSV") {
+            log.info(providerConf.query);
+
+            var userReportDirectory = "/reports/billing/csv/";
+            var directory = "repository/deployment/server/jaggeryapps/portal" + userReportDirectory;
+            var reportPrefix = loggedInUser.username.replace("@carbon.super","") + FILE_NAME + "-error-"+ data.month;
+
+            var carbon = require('carbon');
+            removeAllFiles(userReportDirectory, reportPrefix);
+            var service = carbon.server.osgiService('org.wso2telco.analytics.hub.report.engine.ReportEngineService');
+
+            var reportMaxLength = 10;
+
+            var providerConf = data[PROVIDER_CONF];
+            var providerAPI = require('js/core/' + providerConf[PROVIDER_NAME] + '-provider-api.js');
+
+            var jagConf = require('jagConf.json');
+            var tableName = jagConf["tableList"]["billing-summery"];
+            var reportColumns = stringify( jagConf[jagConf["reportNames"]["billing-error"]] );
+
+            providerConf.query = "status : 1 AND year:"+ data.year;
+            providerConf.query += " AND month:"+ getMonth(data.month);
+
+            if(loggedInUser.isOperatorAdmin) {
+                providerConf.query += " AND operatorName:" + loggedInUser.operatorNameInProfile;
+            } else {
+                if (data.operatorName != "all" && data.operatorName != undefined && !(loggedInUser.isServiceProvider)) {
+                    if(!(loggedInUser.isAdmin && data.direction == 'nb')) {
+                        providerConf.query += " AND operatorName:" + data.operatorName;
+                    }
+                }
+            }
+
+            if (loggedInUser.isServiceProvider) {
+                serviceProvider = loggedInUser.username;
+                providerConf.query += " AND serviceProvider:" + "\"" + serviceProvider + "\"";
+                providerConf.query += " AND direction:" + "\""+ "nb" + "\"";
+            } else {
+                if (data.serviceProvider != "0" && data.serviceProvider != undefined) {
+                    providerConf.query += " AND serviceProvider:" + "\"" + data.serviceProvider + "\"";
+                }
+                if (loggedInUser.isAdmin) {
+                    providerConf.query += " AND direction:" + "\""+ data.direction + "\"";
+                } else {
+                    providerConf.query += " AND direction:" + "\""+ "sb" + "\"";
+                }
+
+            }
+
+            log.info("Table ==> " + providerConf.tableName);
+            log.info("query ==> " + providerConf.query);
+
+            var reportName = directory + loggedInUser.username.replace("@carbon.super","") + FILE_NAMES
+                            .BILLING_REPORT + "-error-" + data.month + "-"+data.year;
+            var reportType = "billingErrorCSV";
+
+            service.generateReport(tableName, providerConf.query, reportName, reportMaxLength, reportType, reportColumns, null, null, null);
+            print({'message': 'Report is generating'});
+
+            return;
+
         } else if(action == "generateBill") {
             var userReportDirectory = "/reports/billing/pdf/";
             var directory = "repository/deployment/server/jaggeryapps/portal" + userReportDirectory;
@@ -249,6 +310,20 @@
             var files = [];
             for (var i = 0; i < file.listFiles().length; i++) {
                 if (!file.listFiles()[i].getName().search(loggedInUser.username.replace("@carbon.super","") + FILE_NAMES.BILLING_REPORT)) {
+                    files[i] = {"name": file.listFiles()[i].getName(), "index": i};
+                }
+            }
+
+            print(files);
+            return;
+
+        } else if (action == "availableErrorCSV") {
+            var userReportDirectory = "/reports/billing/csv/";
+            var file = new File(userReportDirectory);
+            var files = [];
+            for (var i = 0; i < file.listFiles().length; i++) {
+                if (!file.listFiles()[i].getName().search(loggedInUser.username.replace("@carbon.super","") +
+                                FILE_NAMES.BILLING_REPORT + "-error-")) {
                     files[i] = {"name": file.listFiles()[i].getName(), "index": i};
                 }
             }

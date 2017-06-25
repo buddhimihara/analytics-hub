@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Analytics>
+    <Name>Sparkscript-billing-processedStatistics</Name>
+    <Script>
+ CREATE TEMPORARY TABLE WSO2TELCO_DEP_PRICING_JSONPROCESSEDRESPONSES
+	USING org.wso2.carbon.analytics.spark.event.EventStreamProvider
+        OPTIONS (	streamName "wso2telco.dep.pricing.jsonProcessedReponses",
+        		version "1.0.0",
+        		payload "
+        			requestId string, 	responseTime long, 		direction string, 
+				api string, 		apiID string,			applicationName string, 
+				applicationId string, 	serviceProvider string, 	serviceProviderId string,
+				operatorName string, 	operatorId string, 		operation string, 
+  				operatorRef string,	chargeAmount double,		category string,
+				subcategory string,	merchant string,		responseCount int,
+				rateCard string,	opCommision double,		spCommision double,
+				hbCommision double,	tax double,			price double,
+				year int, 		month int, 			day int, 
+				hour int
+        		");
+        
+ CREATE TEMPORARY TABLE ORG_WSO2TELCO_ANALYTICS_HUB_STREAM_API_SUMMARY
+      	USING CarbonAnalytics
+      	OPTIONS(tableName "ORG_WSO2TELCO_ANALYTICS_HUB_STREAM_API_SUMMARY");
+          
+ CREATE TEMPORARY TABLE SPARK_JDBC_API_OPERATIONS 
+ 	using CarbonJDBC 
+ 	options (dataSource "WSO2TELCO_RATE_DB", schema "apiid STRING, api_operation STRING", tableName "api_operation");        
+        
+ CREATE TEMPORARY TABLE WSO2TELCO_PRICING_ACCUMULATED_SUMMARY
+      	USING CarbonAnalytics
+      	OPTIONS(tableName "WSO2TELCO_PRICING_ACCUMULATED_SUMMARY");       
+                
+ INSERT INTO TABLE WSO2TELCO_DEP_PRICING_JSONPROCESSEDRESPONSES     
+        SELECT 
+        	rand() as requestId, 	current_timestamp() as responseTime,
+                "sb" as direction,	apisum.api, 			apisum.apiID ,
+		apisum.applicationName,
+		apisum.applicationId ,	apisum.serviceProvider ,	apisum.serviceProviderId ,
+		apisum.operatorName , 	apisum.operatorId , 		apiop.api_operation as operation , 
+  		"" as operatorRef ,	0.0 as chargeAmount ,		"" as category ,
+		"" as subcategory ,	"" as merchant ,		0 as responseCount ,
+		"" as rateCard ,	0.0 as opCommision ,		0.0 as spCommision ,
+		0.0 as hbCommision ,	0.0 as tax ,			0.0 as price ,
+		year(current_timestamp()) as year ,  			month(current_timestamp()) as  month , 
+		dayofmonth(current_timestamp()) as day ,		hour(current_timestamp()) as hour 
+      	FROM SPARK_JDBC_API_OPERATIONS apiop
+                INNER JOIN ORG_WSO2TELCO_ANALYTICS_HUB_STREAM_API_SUMMARY apisum ON apiop.apiid = apisum.apiID
+                LEFT JOIN WSO2TELCO_PRICING_ACCUMULATED_SUMMARY acc 
+                	ON  apisum.apiID=acc.apiID
+                        AND apisum.applicationId=acc.applicationId
+                        AND apisum.serviceProviderId=acc.serviceProviderId
+                        AND apisum.operatorId=acc.operatorId
+                        AND apiop.api_operation=acc.operation                            
+      	WHERE acc.apiID is Null;
+                            
+ INSERT INTO TABLE WSO2TELCO_DEP_PRICING_JSONPROCESSEDRESPONSES     
+	SELECT 
+		rand() as requestId , 		current_timestamp() as responseTime ,
+                "nb" as direction ,		apisum.api , 				apisum.apiID ,
+                apisum.applicationName,		apisum.applicationId ,			apisum.serviceProvider , 
+		apisum.serviceProviderId ,	apisum.operatorName , 			apisum.operatorId , 
+  		apiop.api_operation as operation ,					"" as operatorRef ,
+		0.0 as chargeAmount ,		"" as category ,			"" as subcategory ,
+		"" as merchant ,		0 as responseCount ,			"" as rateCard ,  
+		0.0 as opCommision ,		0.0 as spCommision ,			0.0 as hbCommision ,
+  		0.0 as tax ,			0.0 as price ,				year(current_timestamp()) as year ,  	
+		month(current_timestamp()) as  month , 					dayofmonth(current_timestamp()) as day ,
+		hour(current_timestamp()) as hour 
+     	FROM SPARK_JDBC_API_OPERATIONS apiop
+        	INNER JOIN ORG_WSO2TELCO_ANALYTICS_HUB_STREAM_API_SUMMARY apisum ON apiop.apiid = apisum.apiID
+                LEFT JOIN WSO2TELCO_PRICING_ACCUMULATED_SUMMARY acc 
+                	ON  apisum.apiID=acc.apiID
+                        AND apisum.applicationId=acc.applicationId
+                        AND apisum.serviceProviderId=acc.serviceProviderId
+                        AND apisum.operatorId=acc.operatorId
+                        AND apiop.api_operation=acc.operation
+     	WHERE acc.apiID is Null;
+    </Script>
+    <CronExpression></CronExpression>
+</Analytics>

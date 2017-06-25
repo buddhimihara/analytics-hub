@@ -32,9 +32,14 @@
     var log = new Log();
 
     include("../HubAnalytics-Gadget-Commons/controller-util.jag");
-    var user = session.get('user');
-    var role = getRole(user);
-    var operatorInProfile = getOperator(user);
+
+    var loggedInUser = getLoggedInUser();
+
+    if (action === "getLoggedInUser") {
+        var jsonUser = {"LoggedInUser": loggedInUser};
+        print(jsonUser);
+        return;
+    }
 
     if(action === 'getDataForTable'){
 
@@ -69,8 +74,8 @@
         var application = request.getParameter("a[application]");
         var dateEnd = request.getParameter("a[dateEnd]");
         var dateStart = request.getParameter("a[dateStart]");
-        if (ROLE_OPERATORADMIN == role || ROLE_CUTOMERCARE == role){
-            var operatorQuery = "operatorName:"+operatorInProfile;
+        if (loggedInUser.isOperatorAdmin || loggedInUser.isCustomerCareUser){
+            var operatorQuery = "operatorName:"+loggedInUser.operatorNameInProfile;
             providerConf.query = concatQuery(providerConf.query, operatorQuery);
         }
         var recordsTotal=providerAPI.getRecordCount(providerConf);
@@ -112,10 +117,11 @@
         } else if (providerConf[PROVIDER_NAME] == "app"){
             providerConf.tableName = TABLE_API_SUMMARY;
             providerConf.query = createQuery(data.serviceProvider, data.spIds, providerConf.query, "serviceProviderId");
+            providerConf.query = createQuery(data.operatorName, data.operatorNames, providerConf.query, "operatorName");
         }
 
-        if (ROLE_OPERATORADMIN == role || ROLE_CUTOMERCARE == role){
-            var operatorQuery = "operatorName:"+operatorInProfile;
+        if (loggedInUser.isOperatorAdmin || loggedInUser.isCustomerCareUser){
+            var operatorQuery = "operatorName:"+loggedInUser.operatorNameInProfile;
             providerConf.query = concatQuery(providerConf.query, operatorQuery);
         }
 
@@ -131,7 +137,7 @@ function concatQuery(query, newQuery){
 
 function createQuery(provider, providerList, baseQuery, columnName) {
 
-    if( provider != null && provider != undefined && providerList != null && provider != "") {
+    if( provider != null && provider != undefined && providerList != null && provider != "" && providerList != 0 ) {
         if( (provider.toString().trim().toUpperCase() == 'ALL' || provider == 0)) {
 
             var operatorListText = "";

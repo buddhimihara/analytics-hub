@@ -19,6 +19,7 @@
 package org.wso2telco.analytics.hub.report.engine.internel.util;
 
 import org.wso2.carbon.analytics.datasource.commons.Record;
+import org.wso2telco.analytics.hub.report.engine.internel.model.ResponseTimeRangeData;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class CSVWriter {
 
@@ -74,6 +76,57 @@ public class CSVWriter {
         bufferedWriter.close();
     }
 
+    public static void writeResponseTImeCSV(List<Record> records, int bufSize, String filePath,
+                                            Map<String, String> dataColumns, List<String> columnHeads) throws IOException {
+
+        File file = new File(filePath);
+        file.getParentFile().mkdirs();
+        FileWriter writer = new FileWriter(file, true);
+        BufferedWriter bufferedWriter = new BufferedWriter(writer, bufSize);
+
+        StringBuilder sb = new StringBuilder();
+
+        for (String columnName : columnHeads) {
+            if (sb.length() > 0) {
+                sb.append(',');
+            }
+            sb.append(columnName);
+        }
+
+        sb.append(System.getProperty("line.separator"));
+
+        List<ResponseTimeRangeData> responseTimeRangeDataList = new ArrayList<>();
+        for (Record record : records) {
+
+            ResponseTimeRangeData responseTimeRangeData = new ResponseTimeRangeData();
+            responseTimeRangeData.setCount((Integer) record.getValue("totalResponseCount"));
+            responseTimeRangeData.setRange(clearSpecialCharacters(record.getValue("responseTimeRange")));
+            responseTimeRangeDataList.add(responseTimeRangeData);
+        }
+
+        Map<String, Integer> summedMap = responseTimeRangeDataList.stream().collect(
+                Collectors.groupingBy(ResponseTimeRangeData::getRange, Collectors.summingInt
+                        (ResponseTimeRangeData::getCount)));
+
+        LinkedHashMap<String, Integer> sortedMap = summedMap.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
+        Iterator<Map.Entry<String, Integer>> iterator = sortedMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+
+            Map.Entry<String, Integer> next = iterator.next();
+            String key = next.getKey();
+            Integer value = next.getValue();
+
+            sb.append(key).append(",").append(value).append(System.getProperty("line.separator"));
+        }
+
+        bufferedWriter.write(sb.toString());
+        bufferedWriter.flush();
+        bufferedWriter.close();
+    }
+
     public static void writeTrafficCSV(List<Record> records, int bufSize, String filePath) throws IOException {
 
         File file = new File(filePath);
@@ -116,6 +169,52 @@ public class CSVWriter {
         bufferedWriter.flush();
         bufferedWriter.close();
 
+    }
+
+    public static void writeErrorCSV(List<Record> records, int bufSize, String filePath, Map<String, String> dataColumns,
+                                     List<String> columnHeads) throws IOException {
+
+        File file = new File(filePath);
+        file.getParentFile().mkdirs();
+        FileWriter writer = new FileWriter(file, true);
+        BufferedWriter bufferedWriter = new BufferedWriter(writer, bufSize);
+        StringBuilder sb = new StringBuilder();
+
+        for (String columnName : columnHeads) {
+            if (sb.length() > 0) {
+                sb.append(',');
+            }
+            sb.append(columnName);
+        }
+        sb.append(System.getProperty("line.separator"));
+        bufferedWriter.write(sb.toString());
+
+        for (Record record : records) {
+            sb = new StringBuilder();
+
+            for (String key : dataColumns.keySet()) {
+                if (sb.length() > 0) {
+                    sb.append(',');
+                }
+                if ("_timestamp".equalsIgnoreCase(key)) {
+                    sb.append(record.getValue("year"))
+                            .append("/")
+                            .append(record.getValue("month"))
+                            .append("/").append(record.getValue("day"));
+                } else {
+                    Object value = record.getValue(key);
+                    if (value == null) {
+                        value = "";
+                    }
+                    sb.append(clearSpecialCharacters(value));
+                }
+            }
+            sb.append(System.getProperty("line.separator"));
+            bufferedWriter.write(sb.toString());
+        }
+        bufferedWriter.flush();
+        bufferedWriter.close();
+        writer.close();
     }
 
 

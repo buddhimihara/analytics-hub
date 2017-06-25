@@ -3,7 +3,8 @@
     "billing-summery": "WSO2TELCO_BILLING_PROCESSEDSTATISTICS"
   },
   "reportNames": {
-    "billing": "csvReport-billing"
+    "billing": "csvReport-billing",
+    "billing-error" : "csvReport-billing-error"
   },
 
   "csvReport-billing": [
@@ -81,6 +82,48 @@
       "column": "month",
       "type": "string",
       "label": "Month"
+    }
+  ],
+  "csvReport-billing-error": [
+    {
+      "column": "_timestamp",
+      "type": "string",
+      "label": "Date"
+    },
+    {
+      "column": "serviceProvider",
+      "type": "string",
+      "label": "Service Provider"
+    },
+    {
+      "column": "operatorName",
+      "type": "string",
+      "label": "Operator Name"
+    },
+    {
+      "column": "operation",
+      "type": "string",
+      "label": "Operation"
+    },
+    {
+      "column": "category",
+      "type": "string",
+      "label": "Category"
+    },
+    {
+      "column": "subcategory",
+      "type": "string",
+      "label": "Sub Category"
+    },
+    {
+      "column": "rateCard",
+      "type": "string",
+      "label": "Rate Card"
+    },
+    {
+      "column": "statusInfo",
+      "type": "string",
+      "label": "Status Info"
     }
   ]
 }

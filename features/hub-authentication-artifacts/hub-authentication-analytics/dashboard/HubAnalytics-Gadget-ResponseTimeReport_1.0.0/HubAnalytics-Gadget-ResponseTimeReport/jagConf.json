@@ -1,0 +1,18 @@
+{
+  "reportNames": {
+    "response-time": "csvReport-response-time"
+  },
+
+  "csvReport-response-time": [
+    {
+      "column": "responseTimeRange",
+      "type": "string",
+      "label": "Response Time Range"
+    },
+    {
+      "column": "totalResponseCount",
+      "type": "int",
+      "label": "Total Response Count"
+    }
+  ]
+}

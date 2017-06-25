@@ -1,0 +1,122 @@
+{
+  "name": "wso2telco.dep.pricing.jsonProcessedReponses",
+  "version": "1.0.0",
+  "nickName": "jsonProcessedReponses",
+  "description": "json Processed Reponses",
+  "payloadData": [
+
+
+    {
+      "name": "requestId",
+      "type": "STRING"
+    },
+    {
+      "name": "responseTime",
+      "type": "LONG"
+    },
+    {
+      "name": "direction",
+      "type": "STRING"
+    },
+    {
+      "name": "api",
+      "type": "STRING"
+    },
+    {
+      "name": "apiID",
+      "type": "STRING"
+    },
+    {
+      "name": "applicationName",
+      "type": "STRING"
+    },
+    {
+      "name": "applicationId",
+      "type": "STRING"
+    },
+    {
+      "name": "serviceProvider",
+      "type": "STRING"
+    },
+    {
+      "name": "serviceProviderId",
+      "type": "STRING"
+    },
+    {
+      "name": "operatorName",
+      "type": "STRING"
+    },
+    {
+      "name": "operatorId",
+      "type": "STRING"
+    },
+    {
+      "name": "operation",
+      "type": "STRING"
+    },
+    {
+      "name": "operatorRef",
+      "type": "STRING"
+    },
+    {
+      "name": "chargeAmount",
+      "type": "DOUBLE"
+    },
+    {
+      "name": "category",
+      "type": "STRING"
+    },
+    {
+      "name": "subcategory",
+      "type": "STRING"
+    },
+    {
+      "name": "merchant",
+      "type": "STRING"
+    },
+    {
+      "name": "responseCount",
+      "type": "INT"
+    },
+    {
+      "name": "rateCard",
+      "type": "STRING"
+    },
+    {
+      "name": "opCommision",
+      "type": "DOUBLE"
+    },
+    {
+      "name": "spCommision",
+      "type": "DOUBLE"
+    },    
+    {
+      "name": "hbCommision",
+      "type": "DOUBLE"
+    },
+    {
+      "name": "tax",
+      "type": "DOUBLE"
+    },    
+    {
+      "name": "price",
+      "type": "DOUBLE"
+    },
+    {
+      "name": "year",
+      "type": "INT"
+    },
+    {
+      "name": "month",
+      "type": "INT"
+    },
+    {
+      "name": "day",
+      "type": "INT"
+    },
+    {
+      "name": "hour",
+      "type": "INT"
+    }
+  ]
+}

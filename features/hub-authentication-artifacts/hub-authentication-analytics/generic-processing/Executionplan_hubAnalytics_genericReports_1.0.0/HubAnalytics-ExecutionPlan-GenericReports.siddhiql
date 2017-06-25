@@ -97,6 +97,20 @@ cast(wso2TelcoHubAnalytics:getJSONBody(jsonBody,'requestError.serviceException.t
 year, month,day,hour,operatorName, apiPublisherID, apiID, department, applicationId
 insert into tempFailureProcessedResponse;
 
+
+/**
+* Handles service exception of failure response 
+* Add an empty string for the responseTimeRange for direction git nb
+*/
+@info(name = 'query7.1')
+from tempFailurePreProcessedResponse [(wso2TelcoHubAnalytics:getJSONBody(jsonBody,'subscription.destinationAddresses[0].status') is null) == false]
+select api,resourcePath,method,responseTime,serviceTime,serviceProvider,apiPublisher,applicationName,requestId,operatorId,responseCode,isSuccess,msisdn,direction,jsonBody,serviceProviderId,spUserId,spConsumerKey,
+cast(wso2TelcoHubAnalytics:getJSONBody(jsonBody,'subscription.destinationAddresses[0].status'),'string') as errorMessageId,
+cast(wso2TelcoHubAnalytics:getJSONBody(jsonBody,'subscription.destinationAddresses[0].status'),'string') as errorText, '' as responseTimeRange,
+year, month,day,hour,operatorName, apiPublisherID, apiID, department, applicationId
+insert into tempFailureProcessedResponse;
+
+
 /**
 * Handles policy exception of failure response
 * Add an empty string for the responseTimeRange

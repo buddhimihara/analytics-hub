@@ -5,7 +5,8 @@
     var STREAM = { API_SUMMERY:"ORG_WSO2TELCO_ANALYTICS_HUB_STREAM_API_SUMMARY" };
     var TYPE = { OPERATOR:"operator", SP:"sp", APP:"app" };
     var BATCH = "batch";
-    var FILE_NAMES = {TRANSACTION_REPORT:'-transaction-report-', TRAFFIC_REPORT:'-traffic-report-', BILLING_REPORT:'-billing-summery-'};
+    var FILE_NAMES = {TRANSACTION_REPORT:'-transaction-report-', TRAFFIC_REPORT:'-traffic-report-',
+        BILLING_REPORT:'-billing-summery-', RESPONSE_TIME_REPORT : '-response-time-report-'};
     var METHOD = {GET:"GET", POST:"POST"};
     var CONTENT_TYPE = {APP_JSON : "application/json", APP_OCTSTREAM : "application/octet-stream"};
 %>
